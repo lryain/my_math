@@ -1,5 +1,7 @@
 # A teaching-oriented rust math library
 
+[中文](./README-cn.md)
+
 **Features:**
 - Step by step
 - TDD - Test Driven Development
