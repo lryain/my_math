@@ -92,7 +92,7 @@ impl Div<Vec3> for Vec3 {
     }
 }
 
-/// 操作符重载
+/// 负号操作符重载
 impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self::Output {
