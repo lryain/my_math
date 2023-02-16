@@ -8,8 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 归一化/求模
-- 点积和叉积
+- 3维向量与3维向量的赋值运算
+- 3维向量与3维向量的赋值运算测试
+- 3维向量与f32的基本运算
+- 3维向量与f32的基本运算测试
+- 3维向量与f32的基本赋值运算
+- 3维向量与f32的基本赋值运算测试
+- 3维向量的求模
+- 3维向量的求模测试
+- 3维向量的点积
+- 3维向量的点积测试
 
 ### Changed
 
