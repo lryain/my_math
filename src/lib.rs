@@ -9,17 +9,71 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+
+    /// 一些常用的的向量类型
+    pub const ZERO: Self = Self::fill(0.0);
+    pub const ONE: Self = Self::fill(1.0);
+    pub const NEG: Self = Self::fill(-1.0);
+    pub const X: Self = Self::new(1.0, 0.0, 0.0);
+    pub const Y: Self = Self::new(0.0, 1.0, 0.0);
+    pub const Z: Self = Self::new(0.0, 0.0, 1.0);
+    pub const NAN: Self = Self::fill(f32::NAN);
+    
+    // Util：方法
+    /// 构建一个新的Vec3并用给定的值填充每个元素
+    pub const fn fill(v: f32) -> Self {
+        Self { x: v, y: v, z: v }
+    }
+
     /// Vec3的构造函数，用x, y, z 3个浮点数来构造一个新的向量
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub const fn new(x: f32, y: f32, z: f32) -> Self {
         // println!("Vec3::new(xyz) Called!");
         Self { x, y, z }
+    }
+
+    /// 标准化3维向量的方法
+    /// 向量不能为0，或者很接近0
+    pub fn norm(self) -> Self {
+        // 除以模等于乘以模的倒数
+        let mag_recip = self.mag().recip();
+        if mag_recip.is_finite() && mag_recip>0.0 {
+            // 我们已经实现了Vec3的运算符重载 这里直接可以使用乘法符号进行运算
+            self * mag_recip
+        }else {
+            Self::ZERO
+        }
+    }
+
+    /// 计算当前向量和给定向量的叉积
+    /// 向量a和向量b的叉积的结果是一个新的向量c
+    /// $c_x = a_yb_z − a_zb_y$
+    /// $c_y = a_zb_x − a_xb_z$
+    /// $c_z = a_xb_y − a_yb_x$
+    pub fn cross(&self, v: &Vec3) -> Self {
+        Self {
+            x: (self.y * v.z) - (self.z * v.y),
+            y: (self.z * v.x) - (self.x * v.z),
+            z: (self.x * v.y) - (self.y * v.x),
+        }
+    }
+
+    /// 求两个Vecs之间的距离
+    /// d = \sqrt{(b_×-a_x)^2 + (b_y-a_y)^2 + (b_z-a_z)^2}
+    pub fn dist(self, b: Vec3) -> f32 {
+        ((b.x-self.x).powf(2.0) + (b.y-self.y).powf(2.0) + (b.z-self.z).powf(2.0)).sqrt()
+    }
+
+    /// 第二种方法
+    pub fn dist2(self, b: Vec3) -> f32 {
+        let s = b - self;
+        s.dot(&s).sqrt()
     }
 
     /// 向量的点积,也叫向量的内积、数量积，对两个向量执行点乘运算，
     /// 就是对这两个向量对应位一一相乘之后求和的操作，点乘的结果是一个标量。
     /// 采取第二种求模公式：
     /// a · b = a_x × b_x + a_y × b_y + a_z × b_z
-    /// 
+    ///
     /// 取得当前向量和给定的向量的点积的方法
     pub fn dot(&self, v: &Self) -> f32 {
         (self.x * v.x) + (self.y * v.y) + (self.z * v.z)
@@ -233,6 +287,33 @@ mod tests {
     // 导入这个模块的全部类型
     use super::*;
 
+    // Vec3标准化
+    #[test]
+    fn test_norm() {
+        let v1 = Vec3::new(12.0, -5.0, 0.0);
+        println!("v1.norm(): {:?}", v1.norm());
+        assert_eq!(v1.norm(), Vec3::new(0.923077, -0.3846154, 0.0));
+    }
+
+    // 求两个Vecs之间的距离
+    #[test]
+    fn test_dist() {
+        let v1 = Vec3::new(3.0, -6.0, 3.0);
+        let v2 = Vec3::new(5.0, 7.0, -4.0);
+        println!("v1.dist(v2): {:?}", v1.dist(v2));
+        assert_eq!(v1.dist(v2), 222.0_f32.sqrt());
+    }
+    
+    // Vec3差积运算
+    #[test]
+    fn test_cross() {
+        let v1 = Vec3::new(3.0, 6.0, 2.0);
+        let v2 = Vec3::new(5.0, 7.0, 1.0);
+        // 两个Vec3求点积运算
+        println!("v2.dot(&v2): {:?}", v2.cross(&v1));
+        assert_eq!(v1.cross(&v2), Vec3::new(-8.0, 7.0, -9.0));
+    }
+
     // Vec3点积运算
     #[test]
     fn test_dot() {
@@ -243,6 +324,7 @@ mod tests {
         assert_eq!(v2.dot(&v2), 14.0);
         // 两个Vec3求点积运算
         assert_eq!(v1.dot(&v2), 6.0);
+        println!("v1.dot(&v2) -> {}", v1.dot(&v2));
     }
 
     // Vec3求模运算
@@ -259,12 +341,21 @@ mod tests {
     fn test_vec3_add() {
         let mut v1 = Vec3::new(1.0, 2.0, 3.0);
         let v2 = Vec3::new(1.0, 1.0, 1.0);
+        // Vec3与Vec3加法运算测试
         assert_eq!(v1 + v2, Vec3::new(2.0, 3.0, 4.0));
-        // 赋值运算
+        // Vec3与Vec3加法赋值运算测试
         v1 += v2;
         assert_eq!(v1, Vec3::new(2.0, 3.0, 4.0));
+        // Vec3与f32加法赋值运算测试
         v1 += 0.1;
         assert_eq!(v1, Vec3::new(2.1, 3.1, 4.1));
+    }
+
+    #[test]
+    fn test_fill_vec3() {
+        let mut v1 = Vec3::fill(1.0);
+        let v2 = Vec3::fill(2.0);
+        assert_eq!(v1 + v2, Vec3::new(3.0, 3.0, 3.0));
     }
 
     // Vec3减法运算
@@ -326,24 +417,18 @@ mod tests {
     #[test]
     fn it_works() {
         // 用给定的值构造一个新的Vec3
-        let v = Vec3::new(1.0, 1.0, 1.0);
-        assert_eq!(v.x, 1.0);
-        assert_eq!(v.y, 1.0);
-        assert_eq!(v.z, 1.0);
-
-        let mut v2 = Vec3::from(v);
+        let v1 = Vec3::new(1.0, 1.0, 1.0);
+        assert_eq!(v1, Vec3::fill(1.0));
+        // 拷贝构造 Vec3
+        let mut v2 = Vec3::from(v1);
         v2.x = 3.0;
         assert_eq!(v2.x, 3.0);
-        assert_eq!(v2.y, 1.0);
-        assert_eq!(v2.z, 1.0);
+        // Vec3取负
         v2 = -v2;
-        assert_eq!(v2.x, -3.0);
-        assert_eq!(v2.y, -1.0);
-        assert_eq!(v2.z, -1.0);
         print!("{:#?}", v2);
+        assert_eq!(v2, Vec3::new(-3.0, -1.0, -1.0));
+        // Vec3置零
         v2.zero();
-        assert_eq!(v2.x, 0.0);
-        assert_eq!(v2.y, 0.0);
-        assert_eq!(v2.z, 0.0);
+        assert_eq!(v2, Vec3::fill(0.0));
     }
 }
